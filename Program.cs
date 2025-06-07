@@ -17,6 +17,18 @@ app.MapGet("/todoitems/{id}", async (int id, TodoDb db) =>
             ? Results.Ok(todo)
             : Results.NotFound());
 
+// Endpoint to get all todo items for a specific user
+// If the user id in the url does not match the user id in the todo item, it returns Forbidden
+app.MapGet("{userId}/todoitems/{id}", async (int userId, int id, TodoDb db) =>
+{
+    var todo = await db.Todos.FindAsync(id);
+    if (todo is null) return Results.NotFound();
+    
+    if (todo.UserId != userId) return Results.Ok(todo);
+    
+    return Results.Ok(todo);
+});
+
 app.MapPost("/todoitems", async (Todo todo, TodoDb db) =>
 {
     db.Todos.Add(todo);
