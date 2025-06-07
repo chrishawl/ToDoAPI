@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schemas.github.com/copilot/configuration/1.0/schema.json",
+  "enabled": true,
+  "defaultBehaviors": {
+    "suggestionCount": 3,
+    "enableCompletions": true
+  },
+  "prompts": [
+    {
+      "when": "*",
+      "prompt": "Follow SOLID principles for object-oriented programming in all code suggestions."
+    },
+    {
+      "when": "*",
+      "prompt": "Pay special attention to security best practices. For this .NET Core Web API project, ensure all endpoints have authentication configured."
+    },
+    {
+      "when": "*",
+      "prompt": "Behave as an expert .NET Core engineer with deep and broad knowledge of software, system design, and security."
+    },
+    {
+      "when": "*",
+      "prompt": "Expect there to be unit tests for all methods, including security-aware testing."
+    },
+    {
+      "when": "*",
+      "prompt": "Operate as if following trunk-based development best practices: work in small increments, ensure each commit is focused and granular on a particular issue, fix, or new feature. Working in small incremental changes is critical for the success of trunk-based development."
+    }
+  ]
+}
