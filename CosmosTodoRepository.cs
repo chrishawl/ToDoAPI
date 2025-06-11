@@ -66,11 +66,8 @@ public class CosmosTodoRepository : ITodoRepository
 
     public async Task<Todo> CreateAsync(Todo todo)
     {
-        // Generate GUID if not provided
-        if (string.IsNullOrEmpty(todo.Id))
-        {
-            todo.Id = Guid.NewGuid().ToString();
-        }
+        // Always generate a new GUID on server - never trust client-provided IDs
+        todo.Id = Guid.NewGuid().ToString();
         
         var response = await _container.CreateItemAsync(todo, new PartitionKey(todo.Id));
         return response.Resource;
@@ -80,8 +77,15 @@ public class CosmosTodoRepository : ITodoRepository
     {
         try
         {
-            todo.Id = id; // Ensure the ID matches
-            var response = await _container.ReplaceItemAsync(todo, id, new PartitionKey(id));
+            // Fetch existing todo to update only allowed fields
+            var existingTodo = await _container.ReadItemAsync<Todo>(id, new PartitionKey(id));
+            var todoToUpdate = existingTodo.Resource;
+            
+            // Update only the allowed fields, preserve server-controlled ID
+            todoToUpdate.Name = todo.Name;
+            todoToUpdate.IsComplete = todo.IsComplete;
+            
+            var response = await _container.ReplaceItemAsync(todoToUpdate, id, new PartitionKey(id));
             return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)

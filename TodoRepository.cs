@@ -28,11 +28,8 @@ public class TodoRepository : ITodoRepository
 
     public async Task<Todo> CreateAsync(Todo todo)
     {
-        // Generate GUID if not provided
-        if (string.IsNullOrEmpty(todo.Id))
-        {
-            todo.Id = Guid.NewGuid().ToString();
-        }
+        // Always generate a new GUID on server - never trust client-provided IDs
+        todo.Id = Guid.NewGuid().ToString();
         
         _context.Todos.Add(todo);
         await _context.SaveChangesAsync();
