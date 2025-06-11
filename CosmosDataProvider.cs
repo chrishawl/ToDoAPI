@@ -18,7 +18,7 @@ public class CosmosDataProvider : IDataProvider
         var query = _container.GetItemQueryIterator<Todo>(
             requestOptions: new QueryRequestOptions 
             { 
-                MaxItemCount = -1
+                MaxItemCount = 100
             });
         var results = new List<Todo>();
         
