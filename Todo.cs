@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 public class Todo
 {
     [JsonPropertyName("id")]
-    public int Id { get; set; }
+    public string Id { get; set; } = string.Empty;
     
     [JsonPropertyName("name")]
     public string? Name { get; set; }

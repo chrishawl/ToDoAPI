@@ -42,11 +42,11 @@ public class CosmosTodoRepository : ITodoRepository
         return results;
     }
 
-    public async Task<Todo?> GetByIdAsync(int id)
+    public async Task<Todo?> GetByIdAsync(string id)
     {
         try
         {
-            var response = await _container.ReadItemAsync<Todo>(id.ToString(), new PartitionKey(id.ToString()));
+            var response = await _container.ReadItemAsync<Todo>(id, new PartitionKey(id));
             return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -57,22 +57,22 @@ public class CosmosTodoRepository : ITodoRepository
 
     public async Task<Todo> CreateAsync(Todo todo)
     {
-        // Generate ID if not provided (for Cosmos DB, we'll use a unique identifier)
-        if (todo.Id == 0)
+        // Generate GUID if not provided
+        if (string.IsNullOrEmpty(todo.Id))
         {
-            todo.Id = new Random().Next(1, int.MaxValue);
+            todo.Id = Guid.NewGuid().ToString();
         }
         
-        var response = await _container.CreateItemAsync(todo, new PartitionKey(todo.Id.ToString()));
+        var response = await _container.CreateItemAsync(todo, new PartitionKey(todo.Id));
         return response.Resource;
     }
 
-    public async Task<Todo?> UpdateAsync(int id, Todo todo)
+    public async Task<Todo?> UpdateAsync(string id, Todo todo)
     {
         try
         {
             todo.Id = id; // Ensure the ID matches
-            var response = await _container.ReplaceItemAsync(todo, id.ToString(), new PartitionKey(id.ToString()));
+            var response = await _container.ReplaceItemAsync(todo, id, new PartitionKey(id));
             return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -81,11 +81,11 @@ public class CosmosTodoRepository : ITodoRepository
         }
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(string id)
     {
         try
         {
-            await _container.DeleteItemAsync<Todo>(id.ToString(), new PartitionKey(id.ToString()));
+            await _container.DeleteItemAsync<Todo>(id, new PartitionKey(id));
             return true;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)

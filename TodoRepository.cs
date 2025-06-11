@@ -21,19 +21,25 @@ public class TodoRepository : ITodoRepository
         return await _context.Todos.Where(t => t.IsComplete).ToListAsync();
     }
 
-    public async Task<Todo?> GetByIdAsync(int id)
+    public async Task<Todo?> GetByIdAsync(string id)
     {
         return await _context.Todos.FindAsync(id);
     }
 
     public async Task<Todo> CreateAsync(Todo todo)
     {
+        // Generate GUID if not provided
+        if (string.IsNullOrEmpty(todo.Id))
+        {
+            todo.Id = Guid.NewGuid().ToString();
+        }
+        
         _context.Todos.Add(todo);
         await _context.SaveChangesAsync();
         return todo;
     }
 
-    public async Task<Todo?> UpdateAsync(int id, Todo todo)
+    public async Task<Todo?> UpdateAsync(string id, Todo todo)
     {
         var existingTodo = await _context.Todos.FindAsync(id);
         if (existingTodo is null) 
@@ -46,7 +52,7 @@ public class TodoRepository : ITodoRepository
         return existingTodo;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(string id)
     {
         var todo = await _context.Todos.FindAsync(id);
         if (todo is null) 
