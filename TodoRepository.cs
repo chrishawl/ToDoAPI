@@ -1,29 +1,27 @@
-using Microsoft.EntityFrameworkCore;
-
 namespace TodoApi;
 
 public class TodoRepository : ITodoRepository
 {
-    private readonly TodoDb _context;
+    private readonly IDataProvider _dataProvider;
 
-    public TodoRepository(TodoDb context)
+    public TodoRepository(IDataProvider dataProvider)
     {
-        _context = context;
+        _dataProvider = dataProvider;
     }
 
     public async Task<IEnumerable<Todo>> GetAllAsync()
     {
-        return await _context.Todos.ToListAsync();
+        return await _dataProvider.GetAllAsync();
     }
 
     public async Task<IEnumerable<Todo>> GetCompleteAsync()
     {
-        return await _context.Todos.Where(t => t.IsComplete).ToListAsync();
+        return await _dataProvider.GetCompleteAsync();
     }
 
     public async Task<Todo?> GetByIdAsync(string id)
     {
-        return await _context.Todos.FindAsync(id);
+        return await _dataProvider.GetByIdAsync(id);
     }
 
     public async Task<Todo> CreateAsync(Todo todo)
@@ -31,32 +29,25 @@ public class TodoRepository : ITodoRepository
         // Always generate a new GUID on server - never trust client-provided IDs
         todo.Id = Guid.NewGuid().ToString();
         
-        _context.Todos.Add(todo);
-        await _context.SaveChangesAsync();
-        return todo;
+        return await _dataProvider.CreateAsync(todo);
     }
 
     public async Task<Todo?> UpdateAsync(string id, Todo todo)
     {
-        var existingTodo = await _context.Todos.FindAsync(id);
+        // Fetch existing todo to update only allowed fields - never trust client IDs
+        var existingTodo = await _dataProvider.GetByIdAsync(id);
         if (existingTodo is null) 
             return null;
 
+        // Update only the allowed fields, preserve server-controlled ID
         existingTodo.Name = todo.Name;
         existingTodo.IsComplete = todo.IsComplete;
-        await _context.SaveChangesAsync();
         
-        return existingTodo;
+        return await _dataProvider.UpdateAsync(id, existingTodo);
     }
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var todo = await _context.Todos.FindAsync(id);
-        if (todo is null) 
-            return false;
-
-        _context.Todos.Remove(todo);
-        await _context.SaveChangesAsync();
-        return true;
+        return await _dataProvider.DeleteAsync(id);
     }
 }

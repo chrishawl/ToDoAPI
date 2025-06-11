@@ -4,7 +4,7 @@ using TodoApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure database repository
+// Configure data provider and repository
 var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "InMemory";
 
 if (databaseProvider.Equals("CosmosDb", StringComparison.OrdinalIgnoreCase))
@@ -16,20 +16,23 @@ if (databaseProvider.Equals("CosmosDb", StringComparison.OrdinalIgnoreCase))
         {
             return new CosmosClient(connectionString);
         });
-        builder.Services.AddScoped<ITodoRepository, CosmosTodoRepository>();
+        builder.Services.AddScoped<IDataProvider, CosmosDataProvider>();
     }
     else
     {
         // Fallback to InMemory if CosmosDb connection string is not provided
         builder.Services.AddDbContext<TodoDb>(opt => opt.UseInMemoryDatabase("TodoList"));
-        builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+        builder.Services.AddScoped<IDataProvider, EFDataProvider>();
     }
 }
 else
 {
     builder.Services.AddDbContext<TodoDb>(opt => opt.UseInMemoryDatabase("TodoList"));
-    builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+    builder.Services.AddScoped<IDataProvider, EFDataProvider>();
 }
+
+// Register the unified repository
+builder.Services.AddScoped<ITodoRepository, TodoRepository>();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 

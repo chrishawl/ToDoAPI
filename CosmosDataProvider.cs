@@ -2,11 +2,11 @@ using Microsoft.Azure.Cosmos;
 
 namespace TodoApi;
 
-public class CosmosTodoRepository : ITodoRepository
+public class CosmosDataProvider : IDataProvider
 {
     private readonly Container _container;
 
-    public CosmosTodoRepository(CosmosClient cosmosClient, IConfiguration configuration)
+    public CosmosDataProvider(CosmosClient cosmosClient, IConfiguration configuration)
     {
         var databaseName = configuration["CosmosDb:DatabaseName"] ?? "TodoDB";
         var containerName = configuration["CosmosDb:ContainerName"] ?? "Todos";
@@ -66,9 +66,6 @@ public class CosmosTodoRepository : ITodoRepository
 
     public async Task<Todo> CreateAsync(Todo todo)
     {
-        // Always generate a new GUID on server - never trust client-provided IDs
-        todo.Id = Guid.NewGuid().ToString();
-        
         var response = await _container.CreateItemAsync(todo, new PartitionKey(todo.Id));
         return response.Resource;
     }
@@ -77,15 +74,7 @@ public class CosmosTodoRepository : ITodoRepository
     {
         try
         {
-            // Fetch existing todo to update only allowed fields
-            var existingTodo = await _container.ReadItemAsync<Todo>(id, new PartitionKey(id));
-            var todoToUpdate = existingTodo.Resource;
-            
-            // Update only the allowed fields, preserve server-controlled ID
-            todoToUpdate.Name = todo.Name;
-            todoToUpdate.IsComplete = todo.IsComplete;
-            
-            var response = await _container.ReplaceItemAsync(todoToUpdate, id, new PartitionKey(id));
+            var response = await _container.ReplaceItemAsync(todo, id, new PartitionKey(id));
             return response.Resource;
         }
         catch (CosmosException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
