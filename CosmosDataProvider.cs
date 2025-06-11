@@ -33,7 +33,7 @@ public class CosmosDataProvider : IDataProvider
 
     public async Task<IEnumerable<Todo>> GetCompleteAsync()
     {
-        var queryDefinition = new QueryDefinition("SELECT * FROM c WHERE c.IsComplete = true");
+        var queryDefinition = new QueryDefinition("SELECT * FROM c WHERE c.isComplete = true");
         var query = _container.GetItemQueryIterator<Todo>(
             queryDefinition,
             requestOptions: new QueryRequestOptions 
