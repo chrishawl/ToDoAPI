@@ -15,7 +15,11 @@ public class CosmosTodoRepository : ITodoRepository
 
     public async Task<IEnumerable<Todo>> GetAllAsync()
     {
-        var query = _container.GetItemQueryIterator<Todo>();
+        var query = _container.GetItemQueryIterator<Todo>(
+            requestOptions: new QueryRequestOptions 
+            { 
+                MaxItemCount = -1
+            });
         var results = new List<Todo>();
         
         while (query.HasMoreResults)
@@ -30,7 +34,12 @@ public class CosmosTodoRepository : ITodoRepository
     public async Task<IEnumerable<Todo>> GetCompleteAsync()
     {
         var queryDefinition = new QueryDefinition("SELECT * FROM c WHERE c.IsComplete = true");
-        var query = _container.GetItemQueryIterator<Todo>(queryDefinition);
+        var query = _container.GetItemQueryIterator<Todo>(
+            queryDefinition,
+            requestOptions: new QueryRequestOptions 
+            { 
+                MaxItemCount = -1
+            });
         var results = new List<Todo>();
         
         while (query.HasMoreResults)
