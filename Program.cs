@@ -1,10 +1,36 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Azure.Cosmos;
 using TodoApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure database repository
-builder.Services.AddTodoRepository(builder.Configuration);
+var databaseProvider = builder.Configuration["DatabaseProvider"] ?? "InMemory";
+
+if (databaseProvider.Equals("CosmosDb", StringComparison.OrdinalIgnoreCase))
+{
+    var connectionString = builder.Configuration["CosmosDb:ConnectionString"];
+    if (!string.IsNullOrEmpty(connectionString))
+    {
+        builder.Services.AddSingleton<CosmosClient>(serviceProvider =>
+        {
+            return new CosmosClient(connectionString);
+        });
+        builder.Services.AddScoped<ITodoRepository, CosmosTodoRepository>();
+    }
+    else
+    {
+        // Fallback to InMemory if CosmosDb connection string is not provided
+        builder.Services.AddDbContext<TodoDb>(opt => opt.UseInMemoryDatabase("TodoList"));
+        builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+    }
+}
+else
+{
+    builder.Services.AddDbContext<TodoDb>(opt => opt.UseInMemoryDatabase("TodoList"));
+    builder.Services.AddScoped<ITodoRepository, TodoRepository>();
+}
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 var app = builder.Build();
